@@ -1,0 +1,240 @@
+#!/usr/bin/env python3
+"""
+Matrix-style PyGame Game
+A Matrix-inspired game with falling characters from top to bottom.
+"""
+
+import pygame
+import random
+import sys
+import logging
+import os
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('game.log'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+logger = logging.getLogger(__name__)
+
+class MatrixGame:
+    """Main game class for the Matrix-style pygame game."""
+    
+    def __init__(self, width=800, height=600):
+        """
+        Initialize the game with specified dimensions.
+        
+        Args:
+            width (int): Width of the game window
+            height (int): Height of the game window
+        """
+        try:
+            pygame.init()
+            self.width = width
+            self.height = height
+            self.screen = pygame.display.set_mode((width, height))
+            pygame.display.set_caption("Matrix-Style Game")
+            self.clock = pygame.time.Clock()
+            self.running = True
+            
+            # Game state
+            self.score = 0
+            self.font = pygame.font.Font(None, 36)
+            self.small_font = pygame.font.Font(None, 24)
+            
+            # Matrix characters (including Chinese and English letters/numbers)
+            self.chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789$#@%&*"
+            # Add some Chinese characters for variety
+            self.chinese_chars = "中英文字符测试"
+            self.chars += self.chinese_chars
+            
+            self.char_size = 14
+            self.columns = self.width // self.char_size
+            self.drop_speed = 2
+            
+            # Create matrix rain effect with more characters
+            self.matrix_rain = []
+            for i in range(self.columns):
+                column = {
+                    'x': i * self.char_size,
+                    'y': random.randint(-100, 0),
+                    'speed': random.uniform(1.0, 5.0),  # Increased speed range
+                    'char': random.choice(self.chars),
+                    'brightness': random.randint(150, 255),
+                    'trail_length': random.randint(5, 20),  # Trail length for each column
+                    'trail': []  # Store trail characters
+                }
+                self.matrix_rain.append(column)
+            
+            # Player setup (now a single character)
+            self.player_char = random.choice(self.chars)
+            self.player_x = width // 2
+            self.player_y = height - 50
+            
+            # Colors
+            self.bg_color = (0, 0, 0)  # Black background
+            self.text_color = (0, 255, 0)  # Green text
+            
+            logger.info("Matrix game initialized successfully")
+            
+        except pygame.error as e:
+            logger.error(f"Pygame initialization failed: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error during initialization: {e}")
+            raise
+
+    def update_matrix_rain(self):
+        """Update the matrix rain effect with faster dropping."""
+        try:
+            for column in self.matrix_rain:
+                # Update position
+                column['y'] += column['speed']
+                
+                # Add current character to trail
+                column['trail'].append(column['char'])
+                if len(column['trail']) > column['trail_length']:
+                    column['trail'].pop(0)
+                
+                # Reset column if it goes off screen
+                if column['y'] > self.height:
+                    column['y'] = random.randint(-100, 0)
+                    column['char'] = random.choice(self.chars)
+                    column['brightness'] = random.randint(150, 255)
+                    column['trail'] = []
+                    column['speed'] = random.uniform(1.0, 5.0)  # Random speed for each reset
+                
+                # Randomly change character
+                if random.random() < 0.05:
+                    column['char'] = random.choice(self.chars)
+                    
+        except Exception as e:
+            logger.error(f"Error updating matrix rain: {e}")
+
+    def handle_events(self):
+        """Handle all game events."""
+        try:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        self.running = False
+                    elif event.key == pygame.K_SPACE:
+                        # Reset game on spacebar press
+                        self.score = 0
+                        for i in range(self.columns):
+                            self.matrix_rain[i]['y'] = random.randint(-100, 0)
+                            self.matrix_rain[i]['char'] = random.choice(self.chars)
+                            self.matrix_rain[i]['trail'] = []
+                        logger.info("Game reset by player")
+        except Exception as e:
+            logger.error(f"Error handling events: {e}")
+
+    def handle_player_movement(self):
+        """Handle player movement based on key presses."""
+        try:
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_LEFT] and self.player_x > 0:
+                self.player_x -= 5
+            if keys[pygame.K_RIGHT] and self.player_x < self.width - self.char_size:
+                self.player_x += 5
+        except Exception as e:
+            logger.error(f"Error handling player movement: {e}")
+
+    def update_game_state(self):
+        """Update the game state."""
+        try:
+            self.update_matrix_rain()
+            self.handle_player_movement()
+        except Exception as e:
+            logger.error(f"Error updating game state: {e}")
+
+    def draw_game(self):
+        """Draw everything on the screen with enhanced visual effect."""
+        try:
+            # Clear screen
+            self.screen.fill(self.bg_color)
+            
+            # Draw matrix rain trails and characters
+            for column in self.matrix_rain:
+                # Draw trail (fading effect)
+                for i, trail_char in enumerate(column['trail']):
+                    if i < len(column['trail']) - 1:  # Not the last character
+                        brightness = max(0, column['brightness'] - (i * 10))
+                        char_surface = self.small_font.render(trail_char, True, (0, brightness, 0))
+                        self.screen.blit(char_surface, (column['x'], column['y'] - i * self.char_size))
+                
+                # Draw current character
+                char_surface = self.small_font.render(column['char'], True, (0, column['brightness'], 0))
+                self.screen.blit(char_surface, (column['x'], column['y']))
+            
+            # Draw player character
+            player_surface = self.font.render(self.player_char, True, self.text_color)
+            self.screen.blit(player_surface, (self.player_x, self.player_y))
+            
+            # Draw score
+            score_text = self.font.render(f"Score: {self.score}", True, self.text_color)
+            self.screen.blit(score_text, (10, 10))
+            
+            # Draw instructions
+            instructions = [
+                "Controls:",
+                "Arrow Keys - Move",
+                "Space - Reset Game",
+                "ESC - Quit"
+            ]
+            
+            for i, instruction in enumerate(instructions):
+                text = self.small_font.render(instruction, True, (0, 200, 0))
+                self.screen.blit(text, (self.width - 200, 10 + i * 25))
+            
+            pygame.display.flip()
+            
+        except Exception as e:
+            logger.error(f"Error drawing game: {e}")
+
+    def run(self):
+        """Main game loop."""
+        try:
+            logger.info("Starting Matrix game loop")
+            
+            while self.running:
+                self.handle_events()
+                self.update_game_state()
+                self.draw_game()
+                self.clock.tick(60)  # 60 FPS
+                
+            logger.info("Matrix game loop ended")
+            
+        except KeyboardInterrupt:
+            logger.info("Matrix game interrupted by user")
+        except Exception as e:
+            logger.error(f"Unexpected error in Matrix game loop: {e}")
+        finally:
+            pygame.quit()
+            logger.info("Pygame quit successfully")
+
+def main():
+    """Main entry point for the Matrix game."""
+    try:
+        # Check if we're running from a directory that exists
+        if not os.path.exists('.'):
+            logger.error("Current directory does not exist")
+            return 1
+            
+        game = MatrixGame()
+        game.run()
+        return 0
+        
+    except Exception as e:
+        logger.error(f"Failed to start Matrix game: {e}")
+        return 1
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,287 @@
+#!/usr/bin/env python3
+"""
+Funny PyGame Game
+A simple but entertaining game with colorful visuals and fun mechanics.
+"""
+
+import pygame
+import random
+import sys
+import logging
+import os
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('game.log'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+logger = logging.getLogger(__name__)
+
+class FunnyGame:
+    """Main game class for the funny pygame game."""
+    
+    def __init__(self, width=800, height=600):
+        """
+        Initialize the game with specified dimensions.
+        
+        Args:
+            width (int): Width of the game window
+            height (int): Height of the game window
+        """
+        try:
+            pygame.init()
+            self.width = width
+            self.height = height
+            self.screen = pygame.display.set_mode((width, height))
+            pygame.display.set_caption("Funny PyGame Adventure")
+            self.clock = pygame.time.Clock()
+            self.running = True
+            
+            # Game state
+            self.score = 0
+            self.font = pygame.font.Font(None, 36)
+            self.small_font = pygame.font.Font(None, 24)
+            
+            # Player setup
+            self.player_size = 50
+            self.player_x = width // 2 - self.player_size // 2
+            self.player_y = height - self.player_size - 10
+            self.player_speed = 5
+            
+            # Enemies
+            self.enemies = []
+            self.enemy_spawn_timer = 0
+            self.enemy_spawn_delay = 60  # frames
+            
+            # Collectibles
+            self.collectibles = []
+            self.collectible_spawn_timer = 0
+            self.collectible_spawn_delay = 120  # frames
+            
+            # Colors
+            self.colors = [
+                (255, 0, 0),    # Red
+                (0, 255, 0),    # Green
+                (0, 0, 255),    # Blue
+                (255, 255, 0),  # Yellow
+                (255, 0, 255),  # Magenta
+                (0, 255, 255),  # Cyan
+            ]
+            
+            logger.info("Game initialized successfully")
+            
+        except pygame.error as e:
+            logger.error(f"Pygame initialization failed: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error during initialization: {e}")
+            raise
+
+    def spawn_enemy(self):
+        """Spawn a new enemy at a random x position."""
+        try:
+            enemy = {
+                'x': random.randint(0, self.width - 30),
+                'y': -30,
+                'size': random.randint(20, 40),
+                'speed': random.uniform(1.0, 3.0),
+                'color': random.choice(self.colors)
+            }
+            self.enemies.append(enemy)
+            logger.debug(f"Spawned enemy at x={enemy['x']}, y={enemy['y']}")
+        except Exception as e:
+            logger.error(f"Failed to spawn enemy: {e}")
+
+    def spawn_collectible(self):
+        """Spawn a new collectible at a random x position."""
+        try:
+            collectible = {
+                'x': random.randint(0, self.width - 20),
+                'y': -20,
+                'size': 20,
+                'speed': random.uniform(1.5, 2.5),
+                'color': (random.randint(100, 255), random.randint(100, 255), random.randint(100, 255))
+            }
+            self.collectibles.append(collectible)
+            logger.debug(f"Spawned collectible at x={collectible['x']}, y={collectible['y']}")
+        except Exception as e:
+            logger.error(f"Failed to spawn collectible: {e}")
+
+    def handle_events(self):
+        """Handle all game events."""
+        try:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        self.running = False
+                    elif event.key == pygame.K_SPACE:
+                        # Reset game on spacebar press
+                        self.score = 0
+                        self.enemies.clear()
+                        self.collectibles.clear()
+                        logger.info("Game reset by player")
+        except Exception as e:
+            logger.error(f"Error handling events: {e}")
+
+    def update_game_state(self):
+        """Update the game state."""
+        try:
+            # Move enemies
+            for enemy in self.enemies[:]:
+                enemy['y'] += enemy['speed']
+                if enemy['y'] > self.height:
+                    self.enemies.remove(enemy)
+            
+            # Move collectibles
+            for collectible in self.collectibles[:]:
+                collectible['y'] += collectible['speed']
+                if collectible['y'] > self.height:
+                    self.collectibles.remove(collectible)
+            
+            # Spawn enemies
+            self.enemy_spawn_timer += 1
+            if self.enemy_spawn_timer >= self.enemy_spawn_delay:
+                self.spawn_enemy()
+                self.enemy_spawn_timer = 0
+            
+            # Spawn collectibles
+            self.collectible_spawn_timer += 1
+            if self.collectible_spawn_timer >= self.collectible_spawn_delay:
+                self.spawn_collectible()
+                self.collectible_spawn_timer = 0
+            
+            # Check collisions
+            player_rect = pygame.Rect(self.player_x, self.player_y, self.player_size, self.player_size)
+            
+            # Enemy collisions
+            for enemy in self.enemies[:]:
+                enemy_rect = pygame.Rect(enemy['x'], enemy['y'], enemy['size'], enemy['size'])
+                if player_rect.colliderect(enemy_rect):
+                    self.enemies.remove(enemy)
+                    self.score -= 10
+                    logger.debug("Player hit by enemy")
+            
+            # Collectible collisions
+            for collectible in self.collectibles[:]:
+                collectible_rect = pygame.Rect(collectible['x'], collectible['y'], collectible['size'], collectible['size'])
+                if player_rect.colliderect(collectible_rect):
+                    self.collectibles.remove(collectible)
+                    self.score += 20
+                    logger.debug("Player collected item")
+                    
+        except Exception as e:
+            logger.error(f"Error updating game state: {e}")
+
+    def draw_game(self):
+        """Draw everything on the screen."""
+        try:
+            # Clear screen
+            self.screen.fill((30, 30, 50))  # Dark blue background
+            
+            # Draw stars in background
+            for i in range(100):
+                x = (i * 17) % self.width
+                y = (i * 13) % self.height
+                pygame.draw.circle(self.screen, (255, 255, 255), (x, y), 1)
+            
+            # Draw player
+            pygame.draw.rect(self.screen, (255, 255, 0), 
+                           (self.player_x, self.player_y, self.player_size, self.player_size))
+            # Draw player eyes
+            pygame.draw.circle(self.screen, (0, 0, 0), (self.player_x + 15, self.player_y + 15), 5)
+            pygame.draw.circle(self.screen, (0, 0, 0), (self.player_x + 35, self.player_y + 15), 5)
+            
+            # Draw enemies
+            for enemy in self.enemies:
+                pygame.draw.circle(self.screen, enemy['color'], 
+                                 (int(enemy['x'] + enemy['size']/2), int(enemy['y'] + enemy['size']/2)), 
+                                 enemy['size']//2)
+            
+            # Draw collectibles
+            for collectible in self.collectibles:
+                pygame.draw.rect(self.screen, collectible['color'], 
+                               (collectible['x'], collectible['y'], collectible['size'], collectible['size']))
+            
+            # Draw score
+            score_text = self.font.render(f"Score: {self.score}", True, (255, 255, 255))
+            self.screen.blit(score_text, (10, 10))
+            
+            # Draw instructions
+            instructions = [
+                "Controls:",
+                "Arrow Keys - Move",
+                "Space - Reset Game",
+                "ESC - Quit"
+            ]
+            
+            for i, instruction in enumerate(instructions):
+                text = self.small_font.render(instruction, True, (200, 200, 200))
+                self.screen.blit(text, (self.width - 200, 10 + i * 25))
+            
+            pygame.display.flip()
+            
+        except Exception as e:
+            logger.error(f"Error drawing game: {e}")
+
+    def handle_player_movement(self):
+        """Handle player movement based on key presses."""
+        try:
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_LEFT] and self.player_x > 0:
+                self.player_x -= self.player_speed
+            if keys[pygame.K_RIGHT] and self.player_x < self.width - self.player_size:
+                self.player_x += self.player_speed
+            if keys[pygame.K_UP] and self.player_y > 0:
+                self.player_y -= self.player_speed
+            if keys[pygame.K_DOWN] and self.player_y < self.height - self.player_size:
+                self.player_y += self.player_speed
+        except Exception as e:
+            logger.error(f"Error handling player movement: {e}")
+
+    def run(self):
+        """Main game loop."""
+        try:
+            logger.info("Starting game loop")
+            
+            while self.running:
+                self.handle_events()
+                self.handle_player_movement()
+                self.update_game_state()
+                self.draw_game()
+                self.clock.tick(60)  # 60 FPS
+                
+            logger.info("Game loop ended")
+            
+        except KeyboardInterrupt:
+            logger.info("Game interrupted by user")
+        except Exception as e:
+            logger.error(f"Unexpected error in game loop: {e}")
+        finally:
+            pygame.quit()
+            logger.info("Pygame quit successfully")
+
+def main():
+    """Main entry point for the funny game."""
+    try:
+        # Check if we're running from a directory that exists
+        if not os.path.exists('.'):
+            logger.error("Current directory does not exist")
+            return 1
+            
+        game = FunnyGame()
+        game.run()
+        return 0
+        
+    except Exception as e:
+        logger.error(f"Failed to start game: {e}")
+        return 1
+
+if __name__ == "__main__":
+    sys.exit(main())

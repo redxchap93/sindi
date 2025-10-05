@@ -1,0 +1,4 @@
+2025-10-04 19:27:36,382 - INFO - Starting Simple Robot Controller
+2025-10-04 19:27:36,382 - WARNING - RPi.GPIO not available. Simulation mode enabled.
+2025-10-04 19:27:36,382 - INFO - Running in simulation mode - no actual GPIO control
+2025-10-04 19:27:36,382 - INFO - Robot would move forward, turn, and stop if GPIO was available

@@ -1,0 +1,389 @@
+#!/usr/bin/env python3
+"""
+AI Model Creator Terminal Interface
+A pygame-based terminal for creating AI models with robust error handling.
+"""
+
+import pygame
+import sys
+import os
+import logging
+import subprocess
+import time
+from typing import List, Optional, Tuple
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('ai_model_creator.log'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+logger = logging.getLogger(__name__)
+
+class AITerminal:
+    """A terminal interface for AI model creation with pygame."""
+    
+    def __init__(self, width: int = 800, height: int = 600):
+        """
+        Initialize the AI Terminal.
+        
+        Args:
+            width (int): Width of the terminal window
+            height (int): Height of the terminal window
+        """
+        try:
+            pygame.init()
+            self.width = width
+            self.height = height
+            self.screen = pygame.display.set_mode((width, height))
+            pygame.display.set_caption("AI Model Creator Terminal")
+            
+            # Colors
+            self.bg_color = (10, 10, 20)
+            self.text_color = (200, 220, 255)
+            self.prompt_color = (100, 255, 150)
+            self.error_color = (255, 100, 100)
+            self.success_color = (100, 255, 150)
+            
+            # Fonts
+            self.font = pygame.font.SysFont('monospace', 16)
+            self.big_font = pygame.font.SysFont('monospace', 24, bold=True)
+            
+            # Terminal state
+            self.command_history: List[str] = []
+            self.current_input = ""
+            self.cursor_pos = 0
+            self.scroll_offset = 0
+            self.max_lines = 20
+            
+            # Add welcome message
+            self.add_output("AI Model Creator Terminal v1.0")
+            self.add_output("=" * 50)
+            self.add_output("Type 'help' for available commands")
+            self.add_output("")
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize terminal: {e}")
+            raise
+
+    def add_output(self, text: str) -> None:
+        """
+        Add output text to the terminal.
+        
+        Args:
+            text (str): Text to display
+        """
+        try:
+            self.command_history.append(text)
+            if len(self.command_history) > self.max_lines:
+                self.command_history.pop(0)
+        except Exception as e:
+            logger.error(f"Failed to add output: {e}")
+
+    def handle_command(self, command: str) -> None:
+        """
+        Process terminal commands.
+        
+        Args:
+            command (str): Command to process
+        """
+        try:
+            command = command.strip().lower()
+            
+            if not command:
+                self.add_output("")
+                return
+                
+            self.command_history.append(f"> {command}")
+            
+            if command == "help":
+                self.show_help()
+            elif command == "clear":
+                self.clear_terminal()
+            elif command == "create_model":
+                self.create_model()
+            elif command == "train_model":
+                self.train_model()
+            elif command == "save_model":
+                self.save_model()
+            elif command == "load_model":
+                self.load_model()
+            elif command == "list_models":
+                self.list_models()
+            elif command == "exit" or command == "quit":
+                self.add_output("Goodbye!")
+                pygame.quit()
+                sys.exit(0)
+            else:
+                self.add_output(f"Unknown command: {command}")
+                self.add_output("Type 'help' for available commands")
+                
+        except Exception as e:
+            logger.error(f"Error processing command '{command}': {e}")
+            self.add_output(f"Error: {e}")
+
+    def show_help(self) -> None:
+        """Display help information."""
+        try:
+            self.add_output("Available commands:")
+            self.add_output("  help          - Show this help message")
+            self.add_output("  clear         - Clear the terminal")
+            self.add_output("  create_model  - Create a new AI model")
+            self.add_output("  train_model   - Train the current model")
+            self.add_output("  save_model    - Save the current model")
+            self.add_output("  load_model    - Load a saved model")
+            self.add_output("  list_models   - List available models")
+            self.add_output("  exit/quit     - Exit the terminal")
+            self.add_output("")
+        except Exception as e:
+            logger.error(f"Error showing help: {e}")
+            self.add_output("Error displaying help information")
+
+    def clear_terminal(self) -> None:
+        """Clear the terminal output."""
+        try:
+            self.command_history = []
+            self.add_output("Terminal cleared")
+        except Exception as e:
+            logger.error(f"Error clearing terminal: {e}")
+            self.add_output("Error clearing terminal")
+
+    def create_model(self) -> None:
+        """Create a new AI model."""
+        try:
+            self.add_output("Creating new AI model...")
+            
+            # Simulate model creation
+            time.sleep(1)
+            self.add_output("Model architecture created successfully")
+            self.add_output("Model initialized with default parameters")
+            self.add_output("Ready for training!")
+            self.add_output("")
+            
+        except Exception as e:
+            logger.error(f"Error creating model: {e}")
+            self.add_output(f"Error creating model: {e}")
+
+    def train_model(self) -> None:
+        """Train the current AI model."""
+        try:
+            self.add_output("Training AI model...")
+            
+            # Simulate training process
+            for i in range(10):
+                progress = (i + 1) * 10
+                self.add_output(f"Epoch {i+1}/10 - Training... {progress}% complete")
+                time.sleep(0.5)
+                
+            self.add_output("Training completed successfully!")
+            self.add_output("Model accuracy: 92.4%")
+            self.add_output("Loss: 0.087")
+            self.add_output("")
+            
+        except Exception as e:
+            logger.error(f"Error training model: {e}")
+            self.add_output(f"Error training model: {e}")
+
+    def save_model(self) -> None:
+        """Save the current AI model."""
+        try:
+            self.add_output("Saving AI model...")
+            
+            # Simulate saving
+            time.sleep(1)
+            self.add_output("Model saved successfully to 'model_001.pkl'")
+            self.add_output("")
+            
+        except Exception as e:
+            logger.error(f"Error saving model: {e}")
+            self.add_output(f"Error saving model: {e}")
+
+    def load_model(self) -> None:
+        """Load a saved AI model."""
+        try:
+            self.add_output("Loading AI model...")
+            
+            # Simulate loading
+            time.sleep(1)
+            self.add_output("Model loaded successfully from 'model_001.pkl'")
+            self.add_output("Ready for inference!")
+            self.add_output("")
+            
+        except Exception as e:
+            logger.error(f"Error loading model: {e}")
+            self.add_output(f"Error loading model: {e}")
+
+    def list_models(self) -> None:
+        """List available AI models."""
+        try:
+            self.add_output("Available models:")
+            self.add_output("  model_001.pkl - Trained on MNIST dataset")
+            self.add_output("  model_002.pkl - Trained on CIFAR-10 dataset")
+            self.add_output("  model_003.pkl - Custom neural network")
+            self.add_output("")
+        except Exception as e:
+            logger.error(f"Error listing models: {e}")
+            self.add_output("Error listing models")
+
+    def draw_terminal(self) -> None:
+        """Draw the terminal interface."""
+        try:
+            # Clear screen
+            self.screen.fill(self.bg_color)
+            
+            # Draw title
+            title = self.big_font.render("AI MODEL CREATOR TERMINAL", True, self.text_color)
+            self.screen.blit(title, (20, 20))
+            
+            # Calculate visible lines
+            visible_lines = self.command_history[-(self.max_lines-5):]
+            
+            # Draw command history
+            y_offset = 80
+            for i, line in enumerate(visible_lines):
+                if i < len(visible_lines) - 1:  # Not the current input line
+                    text = self.font.render(line, True, self.text_color)
+                    self.screen.blit(text, (20, y_offset + i * 25))
+                else:  # Current input line
+                    prompt_text = self.font.render(f"> {self.current_input}", True, self.prompt_color)
+                    self.screen.blit(prompt_text, (20, y_offset + i * 25))
+            
+            # Draw cursor
+            cursor_x = 20 + len(self.current_input) * 10
+            cursor_y = y_offset + (len(visible_lines) - 1) * 25
+            pygame.draw.rect(self.screen, self.prompt_color, (cursor_x, cursor_y, 8, 20))
+            
+            # Draw status bar
+            status_text = self.font.render("AI Model Creator v1.0 | Ready", True, self.text_color)
+            self.screen.blit(status_text, (20, self.height - 30))
+            
+            pygame.display.flip()
+            
+        except Exception as e:
+            logger.error(f"Error drawing terminal: {e}")
+
+    def handle_input(self, event) -> bool:
+        """
+        Handle keyboard input.
+        
+        Args:
+            event: Pygame event
+            
+        Returns:
+            bool: True if command was processed
+        """
+        try:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    # Process command
+                    if self.current_input.strip():
+                        self.handle_command(self.current_input)
+                        self.current_input = ""
+                        return True
+                        
+                elif event.key == pygame.K_BACKSPACE:
+                    # Remove character from input
+                    if self.cursor_pos > 0:
+                        self.current_input = self.current_input[:self.cursor_pos-1] + self.current_input[self.cursor_pos:]
+                        self.cursor_pos -= 1
+                        
+                elif event.key == pygame.K_DELETE:
+                    # Delete character at cursor
+                    if self.cursor_pos < len(self.current_input):
+                        self.current_input = self.current_input[:self.cursor_pos] + self.current_input[self.cursor_pos+1:]
+                        
+                elif event.key == pygame.K_LEFT:
+                    # Move cursor left
+                    if self.cursor_pos > 0:
+                        self.cursor_pos -= 1
+                        
+                elif event.key == pygame.K_RIGHT:
+                    # Move cursor right
+                    if self.cursor_pos < len(self.current_input):
+                        self.cursor_pos += 1
+                        
+                elif event.key == pygame.K_UP:
+                    # Move up in command history (not implemented)
+                    pass
+                    
+                elif event.key == pygame.K_DOWN:
+                    # Move down in command history (not implemented)
+                    pass
+                    
+                elif event.key == pygame.K_HOME:
+                    # Move cursor to beginning
+                    self.cursor_pos = 0
+                    
+                elif event.key == pygame.K_END:
+                    # Move cursor to end
+                    self.cursor_pos = len(self.current_input)
+                    
+                elif event.unicode.isprintable():
+                    # Add character to input
+                    char = event.unicode
+                    if char:
+                        self.current_input = self.current_input[:self.cursor_pos] + char + self.current_input[self.cursor_pos:]
+                        self.cursor_pos += 1
+                        
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error handling input: {e}")
+            return False
+
+    def run(self) -> None:
+        """Main terminal loop."""
+        try:
+            clock = pygame.time.Clock()
+            running = True
+            
+            while running:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        running = False
+                    else:
+                        self.handle_input(event)
+                
+                self.draw_terminal()
+                clock.tick(30)  # 30 FPS
+                
+        except Exception as e:
+            logger.error(f"Error in main loop: {e}")
+            raise
+        finally:
+            pygame.quit()
+
+def main() -> None:
+    """
+    Main entry point for the AI Model Creator Terminal.
+    
+    This function initializes the terminal interface and starts the main loop.
+    It includes robust error handling to ensure graceful failure.
+    """
+    try:
+        logger.info("Starting AI Model Creator Terminal")
+        
+        # Validate pygame installation
+        if not pygame.get_init():
+            raise RuntimeError("Pygame failed to initialize")
+            
+        # Create and run terminal
+        terminal = AITerminal()
+        terminal.run()
+        
+        logger.info("AI Model Creator Terminal exited normally")
+        
+    except KeyboardInterrupt:
+        logger.info("Received keyboard interrupt, exiting...")
+        sys.exit(0)
+    except Exception as e:
+        logger.error(f"Fatal error in main: {e}")
+        print(f"Fatal error: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
