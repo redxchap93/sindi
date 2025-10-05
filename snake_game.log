@@ -1,0 +1,8 @@
+2025-10-04 23:06:19,918 - INFO - Starting Snake Game
+2025-10-04 23:06:20,192 - INFO - Snake game initialized successfully
+2025-10-04 23:06:22,093 - INFO - Game over: Snake hit the wall
+2025-10-04 23:06:27,402 - INFO - Snake game initialized successfully
+2025-10-04 23:06:29,303 - INFO - Game over: Snake hit the wall
+2025-10-04 23:06:35,005 - INFO - Game window closed by user
+2025-10-04 23:06:35,005 - INFO - Game loop ended
+2025-10-04 23:06:35,005 - INFO - Snake Game finished successfully
